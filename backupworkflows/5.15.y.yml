@@ -1,0 +1,135 @@
+name: S905D KERNEL 5.15.y
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+      set_515x:
+        description: "KERNEL: 5.15.x"
+        required: true
+        default: ""
+env:
+  REPO_URL: https://github.com/unifreq/linux-5.15.y
+  REPO_BRANCH: main
+  BUILD_DIR: /tmp/kernel
+  SERVERCHAN_SCKEY: true
+  KVER: 5.15.y
+  TOOLCHAIN_URL: https://snapshots.linaro.org/gnu-toolchain/11.2-2021.12-1/aarch64-linux-gnu
+  TOOLCHAIN: gcc-linaro-11.2.1-2021.12-x86_64_aarch64-linux-gnu.tar.xz
+  ARMBIAN_VER: Armbian_22.02.0_Aml_s905d_bullseye_5.10.100_2022.02.12.0039
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+    - name: choose kernel
+      run: |
+        set_515x="${{ github.event.inputs.set_515x }}"
+        echo "KERNEL_5_15_Y=${set_515x}" >> $GITHUB_ENV
+        
+    - name: telegrame_bot
+      run: |
+        if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=🎉 主人：
+          您正在使用kissyouhunter仓库编译 ${{ github.event.inputs.set_515x }} 内核,请耐心等待...... 😋" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+        fi
+        
+    - name: Checkout
+      uses: actions/checkout@v2.3.4
+    - name: Host info
+      run: |
+        pwd
+        ls -lah
+        lscpu
+        free -h
+        df -h 
+        
+    - name: Initialization environment
+      env:
+         DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install $(curl -fsSL git.io/ubuntu-2004-server)
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean  
+        
+    - name: Clone repos
+      run: |
+        git clone $REPO_URL -b $REPO_BRANCH $BUILD_DIR
+        
+    - name: Installing cross compile toolchain
+      run: |
+        cd /opt
+        sudo wget $TOOLCHAIN_URL/$TOOLCHAIN
+        sudo tar -xvf $TOOLCHAIN
+        cd $BUILD_DIR
+        rm -f set_*
+        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_clean set_clean -v
+        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_dtb set_dtb -v
+        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_make set_make -v
+        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_menuconfig set_menuconfig -v
+        cp $GITHUB_WORKSPACE/files/linux-${KVER}/.config .config -v    
+        chmod 755 set_*
+        
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}           
+        
+    - name: Build Kernel  
+      run: |
+        cd $BUILD_DIR
+        ./set_make
+        
+    - name: Extract Kernel
+      run: |
+        cd /tmp && mv kernel/ linux-${KVER} && tar -zcvf linux-${KVER}.tar.gz linux-${KVER}/
+        mkdir -p /tmp/upload/${KERNEL_5_15_Y} && mv /tmp/linux-${KVER}.tar.gz /tmp/upload && cd /tmp/upload
+        curl -LO https://github.com/kissyouhunter/kernel_N1/releases/download/armbian/${ARMBIAN_VER}.img.gz
+        gzip -d ${ARMBIAN_VER}.img.gz
+        loop_armbian=$(sudo losetup -P -f --show "${ARMBIAN_VER}.img")
+        sudo mount ${loop_armbian}p2 /mnt/ && sudo mount ${loop_armbian}p1 /mnt/boot/
+        sudo mv /tmp/upload/linux-${KVER}.tar.gz /mnt/root/ -v && sudo cp $GITHUB_WORKSPACE/install_kernel.sh /mnt/root/install_kernel.sh -v
+        sudo chmod +x /mnt/root/install_kernel.sh
+        sudo sed -i 's|n1kernel|'"$KERNEL_5_15_Y"'|g' /mnt/root/install_kernel.sh
+        sudo sed -i 's|kernelnumber|'"$KVER"'|g' /mnt/root/install_kernel.sh
+        sudo chroot /mnt /bin/bash -c "./root/install_kernel.sh"
+
+    - name: Organize files
+      id: organize
+      run: |
+        sudo cp /mnt/root/boot-${KERNEL_5_15_Y}-kissyouhunter.tar.gz /tmp/upload/${KERNEL_5_15_Y}
+        sudo cp /mnt/root/dtb-amlogic-${KERNEL_5_15_Y}-kissyouhunter.tar.gz /tmp/upload/${KERNEL_5_15_Y}
+        sudo cp /mnt/root/modules-${KERNEL_5_15_Y}-kissyouhunter.tar.gz /tmp/upload/${KERNEL_5_15_Y}
+        cd /tmp/upload/ && tar -zcvf ${KERNEL_5_15_Y}.tar.gz ${KERNEL_5_15_Y}
+        rm -rf ${KERNEL_5_15_Y} && rm -f ${ARMBIAN_VER}.img
+        cd /tmp/upload && sudo chmod -R 777 .
+        rm -f ${ARMBIAN_VER}.img
+        echo "KERNEL=$PWD" >> $GITHUB_ENV
+        echo "::set-output name=status::success"
+
+    - name: Upload kernel directory
+      uses: kittaakos/upload-artifact-as-is@master
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        path: ${{ env.KERNEL }}
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 4
+        
+    - name: telegram_bot
+      run: |
+        if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：
+          您使用kissyouhunter仓库编译 ${{ github.event.inputs.set_515x }} 内核顺利编译完成了！💐" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+        fi

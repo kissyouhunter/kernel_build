@@ -1,0 +1,116 @@
+name: build kernel 5.16.y
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+      rename:
+        description: "KERNEL: 5.16.x / none"
+        required: false
+        default: "none"
+env:
+  SERVERCHAN_SCKEY: true
+  KERNEL_VER: linux-5.16.y
+  KERNEL_URL: https://github.com/unifreq/linux-5.16.y.git
+  ARMBIAN: https://armbian.chi.auroradev.org/dl/_rootfs/bullseye-cli-arm64.e77f7fc048aae394ebb76f5685ca588a.tar.lz4
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+    - name: read kernel
+      run: |
+        rename="${{ github.event.inputs.rename }}"
+        echo "RENAME=${rename}" >> $GITHUB_ENV
+
+    - name: telegrame_bot
+      run: |
+        if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=🎉 主人：
+          您正在使用kissyouhunter仓库编译 "${{ github.event.inputs.rename }}" 内核,请耐心等待...... 😋" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+        fi
+
+    - name: Checkout
+      uses: actions/checkout@v2.3.4
+    - name: Host info
+      run: |
+        pwd
+        ls -lah
+        lscpu
+        free -h
+        df -h 
+
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+    - name: Initialization environment
+      env:
+         DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt update
+        sudo apt remove -y gcc clang-11
+        sudo chmod 777 /etc/apt/sources.list
+        echo "deb http://mirrors.kernel.org/ubuntu impish main universe"  >>  /etc/apt/sources.list
+        sudo apt update
+        sudo apt install -y gcc-11 clang-13
+        sudo apt install -y build-essential crossbuild-essential-arm64 lld qemu-user-static git flex bison ccache libssl-dev pigz zstd xz-utils lzma lz4
+        sudo apt install -y llvm clang
+
+    - name: Clone repos & Download Armbian Rootfs
+      run: |
+        cd /opt && sudo mkdir armbian-bullseye-root && sudo mkdir kernel
+        sudo curl -# -Lo armbian.tar.lz4 $ARMBIAN
+        cd armbian-bullseye-root
+        sudo lz4 -dc ../armbian.tar.lz4 | sudo tar xvf -
+        cd /usr/src
+        sudo git clone $KERNEL_URL
+        
+    - name: Installing Cross Compile Environment
+      run: |
+        cd /usr/src
+        sudo cp $GITHUB_WORKSPACE/scripts/$KERNEL_VER/* ./ -v
+        sudo cp $GITHUB_WORKSPACE/scripts/$KERNEL_VER/.config ./$KERNEL_VER/ -v
+        sudo chmod -R 755 .
+        
+    - name: Build Kernel  
+      run: |                    
+        cd /usr/src/
+        sudo ./make16.sh
+
+    - name: Organize files
+      id: organize
+      run: |
+        sudo mkdir -p /opt/upload
+        sudo mv /opt/kernel /opt/${RENAME}
+        cd /opt/upload
+        sudo tar -zcvf kernel-${RENAME}.tar.gz /opt/${RENAME}/
+        sudo chmod -R 777 .
+        echo "KERNEL=$PWD" >> $GITHUB_ENV
+        echo "::set-output name=status::success"
+
+    - name: Upload kernel directory
+      uses: kittaakos/upload-artifact-as-is@master
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        path: ${{ env.KERNEL }}
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 4
+        
+    - name: telegram_bot
+      run: |
+        if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：
+          您使用kissyouhunter仓库编译 "${{ github.event.inputs.rename }}" 内核顺利编译完成了！💐" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+        fi
