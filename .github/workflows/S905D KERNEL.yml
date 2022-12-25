@@ -62,7 +62,7 @@ jobs:
         fi
 
     - name: Checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@v3
 
     - name: Initialization environment
       env:
@@ -133,21 +133,22 @@ jobs:
         sudo cp /mnt/root/header-${KERNEL_NUMBER}-kissyouhunter.tar.gz upload/${KERNEL_NUMBER}
         cd upload/ && tar -zcf ${KERNEL_NUMBER}.tar.gz ${KERNEL_NUMBER}
         rm -rf ${KERNEL_NUMBER} && rm -f ${ARMBIAN_VER}.img
-        rm -f ${ARMBIAN_VER}.img
+        echo "KERNEL_VER=${KERNEL_NUMBER}.tar.gz" >> $GITHUB_ENV
         echo "KERNEL=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload kernel directory
-      uses: kittaakos/upload-artifact-as-is@master
+      uses: actions/upload-artifact@master
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
+        name: ${{ env.KERNEL_VER }}
         path: ${{ env.KERNEL }}
 
-    - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 4
+    #- name: Delete workflow runs
+    #  uses: GitRML/delete-workflow-runs@main
+    #  with:
+    #    retain_days: 1
+    #    keep_minimum_runs: 4
         
     - name: telegram_bot
       run: |
