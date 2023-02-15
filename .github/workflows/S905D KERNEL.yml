@@ -132,10 +132,19 @@ jobs:
         sudo cp /mnt/root/modules-${KERNEL_NUMBER}-kissyouhunter.tar.gz upload/${KERNEL_NUMBER}
         sudo cp /mnt/root/header-${KERNEL_NUMBER}-kissyouhunter.tar.gz upload/${KERNEL_NUMBER}
         cd upload/ && tar -zcf ${KERNEL_NUMBER}.tar.gz ${KERNEL_NUMBER}
-        rm -rf ${KERNEL_NUMBER} && rm -f ${ARMBIAN_VER}.img
+        rm -f ${ARMBIAN_VER}.img
         echo "KERNEL_VER=${KERNEL_NUMBER}.tar.gz" >> $GITHUB_ENV
         echo "KERNEL=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload to OneDrive
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+        cd upload/
+        rclone -v moveto -P ${KERNEL_NUMBER} kiss:onedrive/OPENWRT/N1_OP/kernel"
+        rm -rf ${KERNEL_NUMBER}
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
 
     - name: Upload kernel directory
       uses: actions/upload-artifact@master
