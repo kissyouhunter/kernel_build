@@ -38,13 +38,13 @@ jobs:
         sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
         sudo -E apt-get update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/kissyouhunter/kernel_N1/main/files/dependency/ubuntu2004-armbian-depends)
+        sudo -E apt-get -y install rclone
         sudo -E apt-get -y autoremove --purge
         sudo -E apt-get clean
         df -h
     
     - name: Upload to OneDrive
       run: |
-        curl https://rclone.org/install.sh | sudo bash
         rclone config show
         rclone -v moveto -P ${KERNEL_NUMBER} kiss:onedrive/OPENWRT/N1_OP/kernel"
         rm -rf ${KERNEL_NUMBER}
