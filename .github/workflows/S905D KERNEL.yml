@@ -137,13 +137,6 @@ jobs:
         echo "KERNEL=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Upload kernel directory
-      uses: actions/upload-artifact@master
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.KERNEL_VER }}
-        path: ${{ env.KERNEL }}
-
     - name: Setup Rclone
       uses: AnimMouse/setup-rclone@v1
       with:
@@ -157,6 +150,13 @@ jobs:
         rm -rf ${KERNEL_NUMBER}
       env:
         RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+
+    - name: Upload kernel directory
+      uses: actions/upload-artifact@master
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: ${{ env.KERNEL_VER }}
+        path: ${{ env.KERNEL }}
 
     - name: Notify on failure
       if: ${{ failure() }}
