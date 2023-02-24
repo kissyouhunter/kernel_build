@@ -34,35 +34,15 @@ jobs:
          DEBIAN_FRONTEND: noninteractive
       run: |
         docker rmi `docker images -q`
-        sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
-        sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
-        sudo -E apt-get update
-        sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/kissyouhunter/kernel_N1/main/files/dependency/ubuntu2004-armbian-depends)
-        sudo -E apt-get -y install rclone
-        sudo -E apt-get -y autoremove --purge
-        sudo -E apt-get clean
-        df -h
+        curl https://rclone.org/install.sh | sudo bash
     
     - name: Upload to OneDrive
-      run: |
-        rclone config show
-        rclone -v moveto -P ${KERNEL_NUMBER} kiss:onedrive/OPENWRT/N1_OP/kernel"
-        rm -rf ${KERNEL_NUMBER}
       env:
-        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-
-    - name: Upload kernel directory
-      uses: actions/upload-artifact@master
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.KERNEL_VER }}
-        path: ${{ env.KERNEL }}
-
-    #- name: Delete workflow runs
-    #  uses: GitRML/delete-workflow-runs@main
-    #  with:
-    #    retain_days: 1
-    #    keep_minimum_runs: 4
+        RCLONE_CONFIG_FILE: ${{ secrets.RCLONE_CONFIG_FILE }}
+      run: |
+        mkdir -p $HOME/.config/rclone/
+        wget https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
+        rclone -v moveto -P openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel"
         
     - name: telegram_bot
       run: |
