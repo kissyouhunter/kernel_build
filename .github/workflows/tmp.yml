@@ -36,7 +36,7 @@ jobs:
       run: |
         curl -LO https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
         ls -a
-        'rclone moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:'
+        rclone -v moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel/op
         
     - name: Notify on failure
       if: ${{ failure() }}
