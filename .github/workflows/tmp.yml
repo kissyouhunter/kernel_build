@@ -30,11 +30,11 @@ jobs:
     
     - name: Upload to OneDrive
       env:
-        RCLONE_CONFIG_FILE: ${{ secrets.RCLONE_CONFIG_FILE }}
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
       run: |
         mkdir -p $HOME/.config/rclone/
         wget https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
-        rclone -v moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel"
+        rclone moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel"
         
     - name: Notify on failure
       if: ${{ failure() }}
