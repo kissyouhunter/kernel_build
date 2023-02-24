@@ -29,17 +29,11 @@ jobs:
         curl https://rclone.org/install.sh | sudo bash
     
     - name: Upload to OneDrive
-      env:
-        RCLONE_CONFIG_FILE: ${{ secrets.RCLONE_CONFIG_FILE }}
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
       run: |
-        mkdir -p $HOME/.config/rclone/
         curl -LO https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
-        if [ -d $HOME/.config/rclone/ ]; then
-          cp $RCLONE_CONFIG_FILE $HOME/.config/rclone/
-        else
-          echo "Target directory does not exist or is not a directory"
-          exit 1
-        fi
         rclone moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel"
         
     - name: Notify on failure
