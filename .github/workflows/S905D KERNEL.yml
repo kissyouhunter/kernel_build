@@ -137,6 +137,18 @@ jobs:
         echo "KERNEL=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
+    - name: Upload kernel directory
+      uses: actions/upload-artifact@master
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: ${{ env.KERNEL_VER }}
+        path: ${{ env.KERNEL }}
+
+    - name: Setup Rclone
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
     - name: Upload to OneDrive
       run: |
         curl https://rclone.org/install.sh | sudo bash
@@ -146,18 +158,11 @@ jobs:
       env:
         RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
 
-    - name: Upload kernel directory
-      uses: actions/upload-artifact@master
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.KERNEL_VER }}
-        path: ${{ env.KERNEL }}
-
-    #- name: Delete workflow runs
-    #  uses: GitRML/delete-workflow-runs@main
-    #  with:
-    #    retain_days: 1
-    #    keep_minimum_runs: 4
+    - name: Notify on failure
+      if: ${{ failure() }}
+      run: |
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的😭主人😭：
+          您使用kissyouhunter仓库编译 ${{ github.event.inputs.set_number }} 内核失败了，请及时处理！😭" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
         
     - name: telegram_bot
       run: |

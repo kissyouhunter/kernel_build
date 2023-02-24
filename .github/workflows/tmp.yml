@@ -35,8 +35,8 @@ jobs:
     - name: Upload to OneDrive
       run: |
         curl -LO https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
-        ls -a
-        rclone -v moveto openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel/op
+        mkdir -p op && mv -v openwrt-armvirt-64-default-rootfs.tar.gz op/
+        rclone -v moveto op kiss:onedrive/OPENWRT/N1_OP/kernel/op
         
     - name: Notify on failure
       if: ${{ failure() }}
