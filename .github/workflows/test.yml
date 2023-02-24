@@ -1,0 +1,55 @@
+name: test
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'      
+env:
+  SERVERCHAN_SCKEY: true
+  TOOLCHAIN_URL: https://github.com/kissyouhunter/kernel_N1/releases/download/toolchain
+  TOOLCHAIN: gcc-linaro-11.3.1-2022.06-x86_64_aarch64-linux-gnu.tar.xz
+  ARMBIAN_VER: Armbian_22.08.0_Aml_s905d_jammy_5.4.205_2022.07.16
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Initialization environment
+      env:
+         DEBIAN_FRONTEND: noninteractive
+      run: |
+        docker rmi `docker images -q`
+    
+    - name: Setup Rclone
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+    - name: Upload to OneDrive
+      run: |
+        curl -LO https://github.com/kissyouhunter/kernel_N1/raw/main/kernel/5.4.232/boot-5.4.232-kissyouhunter.tar.gz
+        curl -LO https://github.com/kissyouhunter/kernel_N1/raw/main/kernel/5.4.232/dtb-amlogic-5.4.232-kissyouhunter.tar.gz
+        curl -LO https://github.com/kissyouhunter/kernel_N1/raw/main/kernel/5.4.232/header-5.4.232-kissyouhunter.tar.gz
+        curl -LO https://github.com/kissyouhunter/kernel_N1/raw/main/kernel/5.4.232/modules-5.4.232-kissyouhunter.tar.gz
+        mkdir -p op && mv -v *-kissyouhunter.tar.gz op/
+        rclone -v moveto op kiss:onedrive/OPENWRT/N1_OP/kernel/op
+        
+    - name: Notify on failure
+      if: ${{ failure() }}
+      run: |
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的😭主人😭：
+          您使用kissyouhunter仓库编译 ${{ github.event.inputs.set_number }} 内核失败了，请及时处理！😭" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+
+    - name: telegram_bot
+      run: |
+        if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：
+          您使用kissyouhunter仓库编译 ${{ github.event.inputs.set_number }} 内核顺利编译完成了！💐" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+        fi
