@@ -7,15 +7,7 @@ on:
       ssh:
         description: 'SSH connection to Actions'
         required: false
-        default: 'false'
-      set_kernel:
-        description: "KERNEL: 5.4 / 5.10 / 5.15 / 6.1"
-        required: true
-        default: ""
-      set_number:
-        description: "NUMBER: 5.4.x / 5.10.x / 5.15.x / 6.1.x"
-        required: true
-        default: ""        
+        default: 'false'      
 env:
   SERVERCHAN_SCKEY: true
   TOOLCHAIN_URL: https://github.com/kissyouhunter/kernel_N1/releases/download/toolchain
