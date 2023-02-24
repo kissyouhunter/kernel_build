@@ -144,7 +144,6 @@ jobs:
 
     - name: Upload to OneDrive
       run: |
-        curl https://rclone.org/install.sh | sudo bash
         cd upload/
         rclone -v moveto ${KERNEL_NUMBER} kiss:onedrive/OPENWRT/N1_OP/kernel/${KERNEL_NUMBER}
         rm -rf ${KERNEL_NUMBER}
