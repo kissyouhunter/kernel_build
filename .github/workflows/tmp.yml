@@ -44,6 +44,12 @@ jobs:
         wget https://github.com/kissyouhunter/openwrt_N1/releases/download/rootfs/openwrt-armvirt-64-default-rootfs.tar.gz
         rclone -v moveto -P openwrt-armvirt-64-default-rootfs.tar.gz kiss:onedrive/OPENWRT/N1_OP/kernel"
         
+    - name: Notify on failure
+      if: ${{ failure() }}
+      run: |
+          curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=我亲爱的✨主人✨：
+          您使用kissyouhunter仓库编译 ${{ github.event.inputs.set_number }} 内核失败了，请及时处理！💐" "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"
+
     - name: telegram_bot
       run: |
         if [[ "${SERVERCHAN_SCKEY}" == "true" ]]; then
