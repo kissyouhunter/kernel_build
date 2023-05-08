@@ -145,7 +145,7 @@ jobs:
     - name: Upload to OneDrive
       run: |
         cd upload/
-        rclone -v moveto ${KERNEL_NUMBER} kiss:onedrive/OPENWRT/N1_OP/kernel/${KERNEL_NUMBER}
+        rclone -v moveto ${KERNEL_NUMBER} jollifia_kisse5:onedrive/OPENWRT/N1_OP/kernel/${KERNEL_NUMBER}
         rm -rf ${KERNEL_NUMBER}
 
     - name: Upload kernel directory
