@@ -14,10 +14,10 @@ on:
         default: "5.4"
         type: choice
         options:
-          - 5.4
-          - 5.10
-          - 5.15
-          - 6.1
+          - "5.4"
+          - "5.10"
+          - "5.15"
+          - "6.1"
       set_number:
         description: "NUMBER: 5.4.x / 5.10.x / 5.15.x / 6.1.x"
         required: true
