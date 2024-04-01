@@ -122,7 +122,8 @@ jobs:
         loop_armbian=$(sudo losetup -P -f --show "${ARMBIAN_VER}.img")
         sudo mount ${loop_armbian}p2 /mnt/ && sudo mount ${loop_armbian}p1 /mnt/boot/
         sudo mv linux-${KVER}.tar.gz /mnt/root/linux-${KVER}.tar.gz -v
-        sudo wget https://github.com/kissyouhunter/kernel_build/raw/main/install_kernel.sh /mnt/root/install_kernel.sh -v
+        sudo wget https://github.com/kissyouhunter/kernel_build/raw/main/install_kernel.sh
+        sudo mv install_kernel.sh /mnt/root/install_kernel.sh -v
         sudo chmod +x /mnt/root/install_kernel.sh
         sudo sed -i 's|n1kernel|'"$KERNEL_NUMBER"'|g' /mnt/root/install_kernel.sh
         sudo sed -i 's|kernelnumber|'"$KVER"'|g' /mnt/root/install_kernel.sh
