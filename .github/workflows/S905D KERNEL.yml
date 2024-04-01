@@ -4,10 +4,6 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
       set_kernel:
         description: "KERNEL"
         required: false
@@ -18,8 +14,9 @@ on:
           - "5.10"
           - "5.15"
           - "6.1"
+          - "6.6"
       set_number:
-        description: "NUMBER: 5.4.x / 5.10.x / 5.15.x / 6.1.x"
+        description: "NUMBER: 5.4.x / 5.10.x / 5.15.x / 6.1.x / 6.6.x"
         required: true
         default: ""        
 env:
@@ -44,9 +41,9 @@ jobs:
         elif [ "$set_kernel" = "5.15" ]; then
             echo "REPO_URL=https://github.com/unifreq/linux-5.15.y.git" >> $GITHUB_ENV
             echo "KVER=5.15.y" >> $GITHUB_ENV
-        elif [ "$set_kernel" = "6.0" ]; then
-            echo "REPO_URL=https://github.com/unifreq/linux-6.0.y.git" >> $GITHUB_ENV
-            echo "KVER=6.0.y" >> $GITHUB_ENV
+        elif [ "$set_kernel" = "6.6" ]; then
+            echo "REPO_URL=https://github.com/unifreq/linux-6.6.y.git" >> $GITHUB_ENV
+            echo "KVER=6.6.y" >> $GITHUB_ENV
         elif [ "$set_kernel" = "6.1" ]; then
             echo "REPO_URL=https://github.com/unifreq/linux-6.1.y.git" >> $GITHUB_ENV
             echo "KVER=6.1.y" >> $GITHUB_ENV
@@ -83,13 +80,6 @@ jobs:
         sudo -E apt-get clean
         df -h
     
-    - name: SSH connection to Actions
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}  
-        
     - name: Clone repos
       run: |
         rm -rf kernel
