@@ -94,6 +94,7 @@ jobs:
         git clone $REPO_URL kernel
         cd kernel
         rm -f set_*
+        ls $GITHUB_WORKSPACE
         cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_clean set_clean -v
         cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_dtb set_dtb -v
         cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_make set_make -v
