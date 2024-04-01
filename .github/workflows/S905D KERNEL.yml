@@ -16,7 +16,7 @@ on:
           - "6.1"
           - "6.6"
       set_number:
-        description: "NUMBER: 5.4.x / 5.10.x / 5.15.x / 6.1.x / 6.6.x"
+        description: "NUMBER:5.4.x/5.10.x/5.15.x/6.1.x/6.6.x"
         required: true
         default: ""        
 env:
