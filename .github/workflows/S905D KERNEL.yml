@@ -67,7 +67,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-
+    - name: Initialization environment
+      env:
+         DEBIAN_FRONTEND: noninteractive
+      run: |
+        docker rmi $(docker images -q)
+        sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
+        sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+        sudo -E apt-get update
+        sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/kissyouhunter/kernel_N1/main/files/dependency/ubuntu2004-armbian-depends)
+        sudo -E systemctl daemon-reload
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
 
     - name: Combine Disks
       uses: easimon/maximize-build-space@master
@@ -79,17 +90,16 @@ jobs:
     - name: Clone repos
       run: |
         df -hT $GITHUB_WORKSPACE
-        ls -a
         rm -rf kernel
         git clone $REPO_URL kernel
         cd kernel
         rm -f set_*
-        ls $GITHUB_WORKSPACE
-        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_clean set_clean -v
-        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_dtb set_dtb -v
-        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_make set_make -v
-        cp $GITHUB_WORKSPACE/files/linux-${KVER}/set_menuconfig set_menuconfig -v
-        cp $GITHUB_WORKSPACE/files/linux-${KVER}/.config .config -v
+        https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-6.6.y/set_clean
+        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_clean ./
+        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_dtb ./
+        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_make ./
+        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_menuconfig ./
+        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/.config ./
         chmod 755 set_*
         
     - name: Installing cross compile toolchain
@@ -113,7 +123,7 @@ jobs:
         loop_armbian=$(sudo losetup -P -f --show "${ARMBIAN_VER}.img")
         sudo mount ${loop_armbian}p2 /mnt/ && sudo mount ${loop_armbian}p1 /mnt/boot/
         sudo mv linux-${KVER}.tar.gz /mnt/root/linux-${KVER}.tar.gz -v
-        sudo cp $GITHUB_WORKSPACE/install_kernel.sh /mnt/root/install_kernel.sh -v
+        sudo wget https://github.com/kissyouhunter/kernel_build/raw/main/install_kernel.sh /mnt/root/install_kernel.sh -v
         sudo chmod +x /mnt/root/install_kernel.sh
         sudo sed -i 's|n1kernel|'"$KERNEL_NUMBER"'|g' /mnt/root/install_kernel.sh
         sudo sed -i 's|kernelnumber|'"$KVER"'|g' /mnt/root/install_kernel.sh
