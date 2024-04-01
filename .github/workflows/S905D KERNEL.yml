@@ -79,7 +79,6 @@ jobs:
         sudo -E systemctl daemon-reload
         sudo -E apt-get -y autoremove --purge
         sudo -E apt-get clean
-        df -h
 
     - name: Combine Disks
       uses: easimon/maximize-build-space@master
@@ -90,6 +89,8 @@ jobs:
     
     - name: Clone repos
       run: |
+        df -hT $GITHUB_WORKSPACE
+        ls -a
         rm -rf kernel
         git clone $REPO_URL kernel
         cd kernel
