@@ -94,11 +94,11 @@ jobs:
         git clone $REPO_URL kernel
         cd kernel
         rm -f set_*
-        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_clean ./
-        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_dtb ./
-        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_make ./
-        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_menuconfig ./
-        wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/.config ./
+        wget https://raw.githubusercontent.com/kissyouhunter/kernel_build/main/files/linux-${KVER}/set_clean
+        wget https://raw.githubusercontent.com/kissyouhunter/kernel_build/main/files/linux-${KVER}/set_dtb
+        wget https://raw.githubusercontent.com/kissyouhunter/kernel_build/main/files/linux-${KVER}/set_make
+        wget https://raw.githubusercontent.com/kissyouhunter/kernel_build/main/files/linux-${KVER}/set_menuconfig
+        wget https://raw.githubusercontent.com/kissyouhunter/kernel_build/main/files/linux-${KVER}/.config
         chmod 755 set_*
         
     - name: Installing cross compile toolchain
