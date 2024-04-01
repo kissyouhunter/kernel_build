@@ -94,7 +94,6 @@ jobs:
         git clone $REPO_URL kernel
         cd kernel
         rm -f set_*
-        https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-6.6.y/set_clean
         wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_clean ./
         wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_dtb ./
         wget https://github.com/kissyouhunter/kernel_build/raw/main/files/linux-${KVER}/set_make ./
