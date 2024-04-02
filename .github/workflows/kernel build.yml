@@ -161,7 +161,8 @@ jobs:
       - name: Upload to OneDrive
         run: |
           cd ${{ env.PACKAGED_OUTPUTPATH }}/
-          rclone -v --include '*.tar.gz' moveto ./ kiss_blockads:onedrive/OPENWRT/N1_OP/kernel/${{ github.event.inputs.kernel_version }}/
+          tar -xzvf ${{ github.event.inputs.kernel_version }}.tar.gz
+          rclone -v moveto ${{ github.event.inputs.kernel_version }} kiss_blockads:onedrive/OPENWRT/N1_OP/kernel/${{ github.event.inputs.kernel_version }}
 
       - name: Notify on failure
         if: ${{ failure() }}
