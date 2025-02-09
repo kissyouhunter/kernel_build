@@ -59,6 +59,10 @@ on:
         type: choice
         options:
           - -kissyouhunter
+      upload_rclone:
+        description: "whether to upload to OneDrive."
+        required: false
+        default: "false"
 
 env:
   TZ: America/New_York
@@ -104,6 +108,8 @@ jobs:
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
           echo "status=success" >> ${GITHUB_OUTPUT}
+          upload_rclone="${{ github.event.inputs.upload_rclone }}"
+          echo "UPLOAD_RCLONE=${upload_rclone}" >> $GITHUB_ENV
 
       - name: Create simulated physical disk
         id: disk
@@ -155,10 +161,12 @@ jobs:
 
       - name: Setup Rclone
         uses: AnimMouse/setup-rclone@v1
+        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
         with:
           rclone_config: ${{ secrets.RCLONE_CONFIG }}
 
       - name: Upload to OneDrive
+        if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
         run: |
           cd ${{ env.PACKAGED_OUTPUTPATH }}/
           tar -xzvf ${{ github.event.inputs.kernel_version }}.tar.gz
