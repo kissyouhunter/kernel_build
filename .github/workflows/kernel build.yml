@@ -59,6 +59,14 @@ on:
         type: choice
         options:
           - -kissyouhunter
+      kernel_config:
+        description: "Set the path of kernel .config"
+        required: false
+        default: "kernel-config/release/general"
+        type: choice
+        options:
+          - kernel-config/release/general
+          - false
       upload_rclone:
         description: "whether to upload to OneDrive."
         required: false
@@ -99,7 +107,7 @@ jobs:
           sudo rm -f /swapfile /mnt/swapfile
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://is.gd/depend_ubuntu2204_armbian)
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-build-armbian)
           sudo -E systemctl daemon-reload
           #sudo -E apt-get -y full-upgrade
           sudo -E apt-get -y autoremove --purge
@@ -149,9 +157,25 @@ jobs:
           kernel_version: ${{ inputs.kernel_version }}
           kernel_auto: ${{ inputs.kernel_auto }}
           kernel_package: ${{ inputs.kernel_package }}
-          kernel_sign: ${{ inputs.kernel_sign }}
           kernel_toolchain: ${{ inputs.kernel_toolchain }}
+          kernel_sign: ${{ inputs.kernel_sign }}
+          kernel_config: ${{ inputs.kernel_config }}
           compress_format: ${{ inputs.compress_format }}
+
+      - name: Upload Kernel to Release
+        uses: ncipollo/release-action@main
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        with:
+          tag: kernel_stable
+          artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            - The kernel can be used to compile Armbian and OpenWrt.
+            - The kernel source code comes from: ${{ inputs.kernel_source }}
+            - The kernel compilation toolchain: ${{ inputs.kernel_toolchain }}
+            - This is a `stable` kernel, which can be used in Armbian and OpenWrt.
+            - 这是`稳定版`内核，可以在 Armbian 和 OpenWrt 里使用。
 
       - name: Upload kernel directory
         uses: actions/upload-artifact@v4
