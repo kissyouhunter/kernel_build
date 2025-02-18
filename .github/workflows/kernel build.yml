@@ -181,19 +181,19 @@ jobs:
           tar -xzvf ${{ github.event.inputs.kernel_version }}.tar.gz
           rclone -v moveto ${{ github.event.inputs.kernel_version }} kiss_blockads:onedrive/OPENWRT/N1_OP/kernel/${{ github.event.inputs.kernel_version }}
 
-          - name: Upload Kernel to Release
-          uses: ncipollo/release-action@main
-          if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
-          with:
-            tag: kernel_stable
-            commit: main
-            repo: Openwrt_X86-Openwrt_N1-Armbian_N1
-            name:  Kernel_N1
-            artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
-            allowUpdates: true
-            token: ${{ secrets.REPO_TOKEN }}
-            body: |
-              - LTS-Kernel
+      - name: Upload Kernel to Release
+        uses: ncipollo/release-action@main
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        with:
+          tag: kernel_stable
+          commit: main
+          repo: Openwrt_X86-Openwrt_N1-Armbian_N1
+          name:  Kernel_N1
+          artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          allowUpdates: true
+          token: ${{ secrets.REPO_TOKEN }}
+          body: |
+            - LTS-Kernel
 
       - name: Notify on failure
         if: ${{ failure() }}
